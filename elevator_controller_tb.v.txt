@@ -1,0 +1,70 @@
+module tb_elevator;
+reg clk, rst;
+reg ing, inl, in2, in3, inopen, inclose;
+wire open, close, up, down;
+
+elevator uut (
+.clk(clk), .rst(rst),
+.ing(ing), .inl(inl), .in2(in2), .in3(in3),
+.inopen(inopen), .inclose(inclose),
+.open(open), .close(close), .up(up), .down(down)
+);
+
+initial begin
+
+clk = 0;
+rst = 0;
+ing = 0; inl = 0; in2 = 0; in3 = 0;
+inopen = 0; inclose = 0;
+
+#10 rst = 1;
+
+// Test case 1: Move to F1
+#100 inl = 1;    
+#50 inl = 0;      
+
+
+#200; 
+
+// Test case 2: Open doors at F1
+#100 inopen = 1; 
+#50 inopen = 0; 
+
+#100;
+
+// Test case 3: Close doors at F1
+#100 inclose = 1; 
+#50 inclose = 0; 
+
+#100; 
+
+// Test case 4: Move to F2
+#100 in2 = 1; 
+#50 in2 = 0; 
+
+#200; 
+
+// Test case 5: Open doors at F2
+#100 inopen = 1; 
+#50 inopen = 0; 
+
+#100 inclose = 1; 
+#50 inclose = 0; 
+
+#300 $finish;
+end
+
+
+always #10 clk = ~clk;
+
+
+initial begin
+$monitor("Time: %0t | State: %d | Floor: %d | Open: %b | Close: %b | Up: %b | Down: %b",
+$time, uut.pstate, uut.pfloor, open, close, up, down);
+end
+
+initial begin
+$dumpfile("dump.vcd");
+$dumpvars;
+end
+endmodule

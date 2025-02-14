@@ -1,0 +1,127 @@
+//verilog code for  elevator controller
+
+module elevator (
+input clk, rst, ing, inl, in2, in3, inopen, inclose,
+output reg open, close, up, down
+);
+
+parameter IDLE = 4'd8, OPEN = 4'd9, CLOSE = 4'd10, UP = 4'd11, DOWN = 4'd12;
+parameter G = 3'd0, F1 = 3'd1, F2 = 3'd2, F3 = 3'd3;
+
+reg [3:0] pstate, nstate;
+reg [2:0] pfloor, nfloor;
+reg [6:0] count;
+reg reached;
+
+always @(posedge clk or negedge rst) begin
+if (!rst) begin
+pstate <= IDLE;
+pfloor <= G;
+count <= 0;
+reached <= 0;
+end else begin
+pstate <= nstate;
+pfloor <= nfloor;
+end
+end
+
+always @(*) begin
+nstate = pstate;
+nfloor = pfloor;
+
+case (pstate)
+IDLE: begin
+if (inl) begin
+nfloor = F1;
+nstate = UP;
+end else if (in2) begin
+nfloor = F2;
+nstate = UP;
+end else if (in3) begin
+nfloor = F3;
+nstate = UP;
+end else if (inopen) begin
+nstate = OPEN;
+end else if (inclose) begin
+nstate = CLOSE;
+end
+end
+
+UP: begin
+if (reached) begin
+nstate = OPEN;
+end else begin
+if (pfloor != nfloor) begin
+nfloor = pfloor + 1;
+end
+nstate = UP;
+end
+end
+
+OPEN: begin
+if (inclose) begin
+nstate = CLOSE;
+end
+end
+
+CLOSE: begin
+nstate = IDLE;
+end
+
+default: begin
+nstate = IDLE;
+end
+endcase
+end
+
+always @(posedge clk) begin
+if (pstate == UP || pstate == DOWN) begin
+count <= count + 1;
+if (count >= 10) begin
+count <= 0;
+reached <= 1;
+end else begin
+reached <= 0;
+end
+end else begin
+count <= 0;
+reached <= 0;
+end
+end
+
+always @(pstate) begin
+case (pstate)
+IDLE: begin
+open = 1'b0;
+close = 1'b0;
+up = 1'b0;
+down = 1'b0;
+end
+UP: begin
+open = 1'b0;
+close = 1'b0;
+up = 1'b1;
+down = 1'b0;
+end
+OPEN: begin
+open = 1'b1;
+close = 1'b0;
+up = 1'b0;
+down = 1'b0;
+end
+CLOSE: begin
+open = 1'b0;
+close = 1'b1;
+up = 1'b0;
+down = 1'b0;
+end
+default: begin
+open = 1'b0;
+close = 1'b0;
+up = 1'b0;
+down = 1'b0;
+end
+endcase
+end
+
+endmodule
